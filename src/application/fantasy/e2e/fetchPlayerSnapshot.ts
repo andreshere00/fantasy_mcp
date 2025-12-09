@@ -1,14 +1,14 @@
 import type {
     PlayerSnapshot,
     PlayerSnapshotOptions
-  } from "../../../domain/analitica/models.js";
-import type { PlayerSlug } from "../../../domain/analitica/types.js";
+  } from "../../../domain/fantasy/models.js";
+import type { PlayerSlug } from "../../../domain/fantasy/types.js";
 import type {
   AnaliticaPageGateway,
   FantasyEventsExtractor,
   PlayerDetailsExtractor,
   MarketDetailsExtractor,
-} from "../../../domain/analitica/ports.js";
+} from "../../../domain/fantasy/ports.js";
 import type {
   MatchEventRow,
   PlayerDetails,

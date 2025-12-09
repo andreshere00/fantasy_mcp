@@ -1,9 +1,9 @@
 import { AxiosHtmlClient } from "../../infrastructure/http/axiosHtmlClient.js";
-import { AnaliticaPageGatewayImpl } from "../../infrastructure/analitica/pageGateway.js";
-import { FantasyEventsExtractorImpl } from "../../infrastructure/analitica/extractors/fantasyEventsExtractor.js";
-import { PlayerDetailsExtractorImpl } from "../../infrastructure/analitica/extractors/playerDetailsExtractor.js";
-import { MarketDetailsExtractorImpl } from "../../infrastructure/analitica/extractors/marketDetailsExtractor.js";
-import { FetchPlayerSnapshotUseCase } from "../../application/analitica/e2e/fetchPlayerSnapshot.js";
+import { AnaliticaPageGatewayImpl } from "../../infrastructure/fantasy/pageGateway.js";
+import { FantasyEventsExtractorImpl } from "../../infrastructure/fantasy/extractors/fantasyEventsExtractor.js";
+import { PlayerDetailsExtractorImpl } from "../../infrastructure/fantasy/extractors/playerDetailsExtractor.js";
+import { MarketDetailsExtractorImpl } from "../../infrastructure/fantasy/extractors/marketDetailsExtractor.js";
+import { FetchPlayerSnapshotUseCase } from "../../application/fantasy/e2e/fetchPlayerSnapshot.js";
 
 async function run(): Promise<void> {
   const slug: string = process.argv[2] ?? "pedri";
