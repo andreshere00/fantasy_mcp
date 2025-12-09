@@ -1,4 +1,4 @@
-// src/modules/fantasyEvent.ts
+import * as cheerio from "cheerio";
 import type { CheerioAPI } from "cheerio";
 
 import type { 
@@ -6,10 +6,10 @@ import type {
   MatchEvent, 
   MatchScoreDetails, 
   ParsedTeamBlock 
-} from "../../domain/config/interfaces.js";
-import { EventType } from "../../domain/config/interfaces.js";
-import type { CheerioNode } from "../../domain/config/types.js";
-import { parseIntSafe, parseFloatSafe } from "../utils/parsers.js";
+} from "../../../domain/config/interfaces.js";
+import { EventType } from "../../../domain/config/interfaces.js";
+import type { CheerioNode } from "../../../domain/config/types.js";
+import { parseIntSafe, parseFloatSafe } from "../../utils/helpers.js";
 
 import {
   FANTASY_EVENT_MATCHDAY_ID,
@@ -29,7 +29,7 @@ import {
   FANTASY_EVENT_GOAL_FILL,
   FANTASY_EVENT_ASSIST_FILL,
   FANTASY_EVENT_ROWS_ID,
-} from "../../domain/config/constants.js";
+} from "../../../domain/config/constants.js";
 
 /**
  * Parsers
@@ -259,4 +259,9 @@ function detectEventType($: CheerioAPI, node: CheerioNode): EventType {
   }
 
   return EventType.OTHER;
+}
+
+export function parseFantasyEventsFromHtml(html: string): MatchEventRow[] {
+  const $ = cheerio.load(html);
+  return parseFantasyTable($);
 }
