@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "scrape": "tsx src/interfaces/cli/main.ts"
+    "scrape": "bun src/interfaces/cli/main.ts"
   },
   "keywords": [],
   "author": "Andrés Herencia <andresherencia2000@gmail.com>",
