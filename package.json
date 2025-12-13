@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "scrape": "ts-node src/main.ts"
+    "scrape": "tsx src/interfaces/cli/main.ts"
   },
   "keywords": [],
   "author": "Andrés Herencia <andresherencia2000@gmail.com>",
@@ -13,6 +13,7 @@
   "type": "module",
   "dependencies": {
     "axios": "^1.13.2",
+    "bum": "^0.0.0",
     "cheerio": "^1.1.2",
     "pnpm": "^10.25.0"
   },
@@ -26,6 +27,7 @@
     "jest": "^30.2.0",
     "jiti": "^2.6.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.49.0"
   }
