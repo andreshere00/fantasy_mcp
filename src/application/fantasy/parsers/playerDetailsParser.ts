@@ -8,10 +8,10 @@ import {
   PLAYER_DETAILS_LABEL_TEXT,
   PLAYER_DETAILS_SELECTORS,
   POSITION_CODE_MAP,
-} from '../../domain/config/constants.js';
-import type { PlayerDetails, } from '../../domain/config/interfaces.js';
-import type { PlayerPosition } from '../../domain/config/types.js';
-import { parsePercentageToDecimal, parseScore } from '../utils/parsers.js';
+} from '../../../domain/config/constants.js';
+import type { PlayerDetails, } from '../../../domain/config/interfaces.js';
+import type { PlayerPosition } from '../../../domain/config/types.js';
+import { parsePercentageToDecimal, parseScore } from '../../utils/helpers.js';
 
 /**
  * Maps a short position code (e.g., "MC") to a normalized PlayerPosition value.

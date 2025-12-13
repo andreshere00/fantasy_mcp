@@ -4,15 +4,15 @@ import type { CheerioAPI } from 'cheerio';
 import {
   MARKET_DETAILS_LABEL_TEXT,
   MARKET_DETAILS_INTERVAL_LABELS,
-} from '../../domain/config/constants.js';
+} from '../../../domain/config/constants.js';
 import type {
   AllTimeFantasyMarket,
   LastFantasyMarketValues,
   MarketDelta,
   MarketDetails,
   PriceWithDate,
-} from '../../domain/config/interfaces.js';
-import { parseEuroToInteger } from '../utils/parsers.js';
+} from '../../../domain/config/interfaces.js';
+import { parseEuroToInteger } from '../../utils/helpers.js';
 
 /**
  * Parse a summary "card" that contains label, value and date.

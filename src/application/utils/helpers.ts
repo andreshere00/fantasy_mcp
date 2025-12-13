@@ -108,6 +108,12 @@ export const parseScore = (value: string | null | undefined): number => {
   return Number(cleanedNumericPart);
 };
 
+/**
+ * 
+ * @param raw 
+ * @returns 
+ */
+
 export function parseEuroToInteger(raw: string): number {
   const trimmed = raw.trim();
   if (!trimmed) {

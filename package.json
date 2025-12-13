@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "scrape": "ts-node src/main.ts"
+    "scrape": "tsx src/interfaces/cli/main.ts"
   },
   "keywords": [],
   "author": "Andrés Herencia <andresherencia2000@gmail.com>",
@@ -13,13 +13,22 @@
   "type": "module",
   "dependencies": {
     "axios": "^1.13.2",
-    "cheerio": "^1.1.2"
+    "bum": "^0.0.0",
+    "cheerio": "^1.1.2",
+    "pnpm": "^10.25.0"
   },
   "devDependencies": {
-    "@types/cheerio": "^1.0.0",
-    "@types/node": "^24.10.1",
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.2",
+    "@typescript-eslint/parser": "^8.49.0",
     "domhandler": "^5.0.3",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "jest": "^30.2.0",
+    "jiti": "^2.6.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.49.0"
   }
 }
