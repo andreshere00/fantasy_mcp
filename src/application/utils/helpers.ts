@@ -141,6 +141,46 @@ export const parseScore = (value: string | null | undefined): number => {
 };
 
 /**
+ * Parses a user-provided numeric string into a `number`.
+ *
+ * Supports common European formats:
+ * - Thousands separator: `.`
+ * - Decimal separator: `,`
+ *
+ * Examples:
+ * - `"1.250"` -> `1250`
+ * - `"1.250,50"` -> `1250.50`
+ *
+ * @param raw - Raw user input
+ * @returns Parsed number
+ * @throws Error if the input cannot be parsed into a finite number
+ */
+export const parseNumber = (raw: string): number => {
+  const normalized = raw.trim().replace(/\./g, "").replace(",", ".");
+  const n = Number(normalized);
+  if (!Number.isFinite(n)) {
+    throw new Error(`Invalid number: "${raw}"`);
+  }
+  return n;
+};
+
+/**
+ * Parses a comma-separated string into a list of trimmed, non-empty tokens.
+ *
+ * Example:
+ * - `"Pedri, Lewandowski,  Gavi "` -> `["Pedri", "Lewandowski", "Gavi"]`
+ *
+ * @param raw - Raw CSV user input
+ * @returns List of trimmed items (empty items are removed)
+ */
+export const parseCSV = (raw: string): string[] =>
+  raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+
+/**
  * Parses a euro-formatted monetary string into an integer.
  *
  * Examples:
@@ -171,9 +211,9 @@ export function parseEuroToInteger(raw: string): number {
  * Converts a string to a URL-safe ASCII slug.
  *
  * Rules:
- * - Removes accents and diacritics (á → a, ñ → n)
- * - Removes non-ASCII characters
- * - Lowercases all characters
+ * - Removes accents/diacritics (á -> a, ñ -> n, ü -> u)
+ * - Removes non-ASCII symbols and punctuation
+ * - Lowercases
  * - Collapses whitespace into single hyphens
  *
  * @param value - Input string
@@ -183,10 +223,10 @@ export const toAsciiSlug = (value: string): string => {
   const ascii = value
     .trim()
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .replace(/\s+/g, " ")
+    .normalize("NFD") // Split letters and diacritics
+    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+    .replace(/[^a-z0-9\s-]/g, " ") // Remove non-ASCII / punctuation
+    .replace(/\s+/g, " ") // Collapse spaces
     .trim();
 
   return ascii.replace(/\s+/g, "-").replace(/-+/g, "-");
