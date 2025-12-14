@@ -1,49 +1,78 @@
 /**
+ * ======================
  * Generic Helpers
+ * ======================
  */
 
-export function parseIntSafe(value: string | null | undefined): number {
-    const cleaned = (value ?? "").replace(/[^\d-]/g, "");
-    const parsed = Number.parseInt(cleaned, 10);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  
-  export function parseFloatSafe(value: string | null | undefined): number {
-    const cleaned = (value ?? "").replace(/[^0-9.,-]/g, "").replace(",", ".");
-    const parsed = Number.parseFloat(cleaned);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  
 /**
- * Helper function to normalize number strings.
- * Centralizes the logic for "European" format cleaning.
- * * Logic:
- * 1. Find the first number pattern (e.g. "1.200,50")
- * 2. Remove dots (thousands separators)
- * 3. Replace comma with dot (decimal separator)
+ * Safely parses an integer from a string.
+ *
+ * - Removes all non-numeric characters except the minus sign
+ * - Returns `0` if parsing fails
+ *
+ * @param value - Raw input string
+ * @returns Parsed integer or `0` if invalid
+ */
+export function parseIntSafe(value: string | null | undefined): number {
+  const cleaned = (value ?? "").replace(/[^\d-]/g, "");
+  const parsed = Number.parseInt(cleaned, 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Safely parses a floating-point number from a string.
+ *
+ * - Supports European decimal format (`,` as decimal separator)
+ * - Removes non-numeric characters
+ * - Returns `0` if parsing fails
+ *
+ * @param value - Raw input string
+ * @returns Parsed float or `0` if invalid
+ */
+export function parseFloatSafe(value: string | null | undefined): number {
+  const cleaned = (value ?? "")
+    .replace(/[^0-9.,-]/g, "")
+    .replace(",", ".");
+  const parsed = Number.parseFloat(cleaned);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Extracts and normalizes the first numeric value found in a string.
+ *
+ * Centralizes logic for parsing numbers in European formats:
+ *
+ * Logic:
+ * 1. Finds the first numeric pattern (e.g. "1.200,50")
+ * 2. Removes thousands separators (`.`)
+ * 3. Replaces decimal comma with dot (`.`)
+ *
+ * @param text - Input text containing a numeric value
+ * @returns Parsed number or `NaN` if no valid number is found
  */
 const extractNumberFromText = (text: string): number => {
-    // Use the specific regex from your original parse functions
-    const match = RegExp(/(\d+(?:[.,]\d+)?)/).exec(text);
-  
-    // FIX: Use optional chaining (?.) to access index 1 safely.
-    // This solves "Object is possibly 'undefined'" and SonarLint S6582.
-    const numericPart = match?.[1];
-  
-    if (!numericPart) {
-      return NaN;
-    }
-  
-    const normalized = numericPart
-      .replace(/\./g, '') // remove thousands (European)
-      .replace(',', '.'); // decimal comma (European)
-  
-    return Number(normalized);
-  };
-  
+  const match = RegExp(/(\d+(?:[.,]\d+)?)/).exec(text);
+  const numericPart = match?.[1];
+
+  if (!numericPart) {
+    return NaN;
+  }
+
+  const normalized = numericPart
+    .replace(/\./g, "")
+    .replace(",", ".");
+
+  return Number(normalized);
+};
+
 /**
- * Extracts a percentage and converts it to a decimal (0-1).
- * Example: "50,5%" -> 0.505
+ * Extracts a percentage from a string and converts it to a decimal value.
+ *
+ * Example:
+ * - `"50,5%"` → `0.505`
+ *
+ * @param value - Raw percentage string
+ * @returns Decimal value between `0` and `1`, or `NaN` if invalid
  */
 export const parsePercentageToDecimal = (
   value: string | null | undefined,
@@ -57,20 +86,16 @@ export const parsePercentageToDecimal = (
     return NaN;
   }
 
-  // Grab the first integer/decimal-looking number anywhere in the string
   const match = RegExp(/(\d+(?:[.,]\d+)?)/).exec(trimmed);
-  
-  // FIX: Use Optional Chaining (?.) to safely access the captured group.
-  // This resolves the TS2532 error on match[1].
   const numericPart = match?.[1];
-  
+
   if (!numericPart) {
     return NaN;
   }
 
   const cleanedNumericPart = numericPart
-    .replace(/\./g, '') // remove thousands separators
-    .replace(',', '.'); // decimal comma
+    .replace(/\./g, "")
+    .replace(",", ".");
 
   const numeric = Number(cleanedNumericPart);
   if (Number.isNaN(numeric)) {
@@ -78,10 +103,19 @@ export const parsePercentageToDecimal = (
   }
 
   const decimal = numeric / 100;
+
   // Clamp between 0 and 1
   return Math.min(1, Math.max(0, decimal));
 };
 
+/**
+ * Extracts a numeric score from a string.
+ *
+ * Supports European decimal formats and ignores surrounding text.
+ *
+ * @param value - Raw score string
+ * @returns Parsed numeric score or `NaN` if invalid
+ */
 export const parseScore = (value: string | null | undefined): number => {
   if (value == null) {
     return NaN;
@@ -93,35 +127,37 @@ export const parseScore = (value: string | null | undefined): number => {
   }
 
   const match = RegExp(/(\d+(?:[.,]\d+)?)/).exec(trimmed);
-
-  // FIX: Use Optional Chaining (?.) to safely access the captured group.
   const numericPart = match?.[1];
 
   if (!numericPart) {
-      return NaN;
+    return NaN;
   }
 
   const cleanedNumericPart = numericPart
-    .replace(/\./g, '')
-    .replace(',', '.');
+    .replace(/\./g, "")
+    .replace(",", ".");
 
   return Number(cleanedNumericPart);
 };
 
 /**
- * 
- * @param raw 
- * @returns 
+ * Parses a euro-formatted monetary string into an integer.
+ *
+ * Examples:
+ * - `"18.890.000€"` → `18890000`
+ * - `"-160.000€"` → `-160000`
+ *
+ * @param raw - Raw euro-formatted string
+ * @returns Integer representation of the value
  */
-
 export function parseEuroToInteger(raw: string): number {
   const trimmed = raw.trim();
   if (!trimmed) {
     return 0;
   }
 
-  const isNegative = trimmed.startsWith('-');
-  const digitsOnly = trimmed.replace(/\D/g, '');
+  const isNegative = trimmed.startsWith("-");
+  const digitsOnly = trimmed.replace(/\D/g, "");
 
   if (!digitsOnly) {
     return 0;
@@ -132,25 +168,37 @@ export function parseEuroToInteger(raw: string): number {
 }
 
 /**
- * Converts a string to a URL-safe ASCII slug:
- * - Removes accents/diacritics (á -> a, ñ -> n, ü -> u)
- * - Removes non-ASCII symbols
- * - Lowercases
- * - Collapses whitespace to single hyphens
+ * Converts a string to a URL-safe ASCII slug.
+ *
+ * Rules:
+ * - Removes accents and diacritics (á → a, ñ → n)
+ * - Removes non-ASCII characters
+ * - Lowercases all characters
+ * - Collapses whitespace into single hyphens
+ *
+ * @param value - Input string
+ * @returns URL-safe ASCII slug
  */
 export const toAsciiSlug = (value: string): string => {
   const ascii = value
     .trim()
     .toLowerCase()
-    .normalize('NFD')                 // Split letters and diacritics
-    .replace(/[\u0300-\u036f]/g, '')  // Remove diacritics
-    .replace(/[^a-z0-9\s-]/g, ' ')    // Remove non-ASCII / punctuation
-    .replace(/\s+/g, ' ')            // Collapse spaces
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
-  return ascii.replace(/\s+/g, '-').replace(/-+/g, '-');
+  return ascii.replace(/\s+/g, "-").replace(/-+/g, "-");
 };
 
+/**
+ * Returns a list of unique, non-empty strings
+ * while preserving original order.
+ *
+ * @param items - Input list
+ * @returns Deduplicated list without empty values
+ */
 export const uniqueNonEmpty = (items: readonly string[]): string[] => {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -167,35 +215,41 @@ export const uniqueNonEmpty = (items: readonly string[]): string[] => {
 };
 
 /**
- * Builds a list of candidate ids from a full name.
+ * Builds a list of candidate identifiers from a full name.
+ *
  * Rules:
- *  1) name-surname
- *  2) name
- *  3) surname
- *  4) firstLetter(name)-surname
+ * 1. `name-surname`
+ * 2. `name`
+ * 3. `surname`
+ * 4. `initial-surname`
  *
  * "Name" is the first token, "surname" is the last token.
+ *
+ * @param fullName - Full name of the player
+ * @returns List of candidate ID slugs
  */
-export const buildIdCandidatesFromFullName = (fullName: string): string[] => {
+export const buildIdCandidatesFromFullName = (
+  fullName: string,
+): string[] => {
   const cleaned = fullName
     .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/[-_]+/g, ' ');
+    .replace(/\s+/g, " ")
+    .replace(/[-_]+/g, " ");
 
-  const parts = cleaned.split(' ').filter(Boolean);
+  const parts = cleaned.split(" ").filter(Boolean);
 
-  const name = parts.at(0) ?? '';
-  const surname = parts.length > 1 ? (parts.at(-1) ?? '') : '';
-  const nameInitial = name.charAt(0); // Always a string (possibly empty)
+  const name = parts.at(0) ?? "";
+  const surname = parts.length > 1 ? parts.at(-1) ?? "" : "";
+  const nameInitial = name.charAt(0);
 
   if (!name && !surname) {
     return [];
   }
 
-  const c1 = surname ? `${name} ${surname}` : name;          // name-surname (or name if no surname)
-  const c2 = name;                                          // name
-  const c3 = surname;                                       // surname
-  const c4 = surname && nameInitial ? `${nameInitial} ${surname}` : nameInitial; // n-surname or initial
+  const c1 = surname ? `${name} ${surname}` : name;
+  const c2 = name;
+  const c3 = surname;
+  const c4 = surname && nameInitial ? `${nameInitial} ${surname}` : nameInitial;
 
   return uniqueNonEmpty([
     toAsciiSlug(c1),

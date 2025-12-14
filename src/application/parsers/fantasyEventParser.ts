@@ -1,11 +1,11 @@
 import * as cheerio from "cheerio";
 import type { CheerioAPI } from "cheerio";
 
-import type { 
-  MatchEventRow, 
-  MatchEvent, 
-  MatchScoreDetails, 
-  ParsedTeamBlock 
+import type {
+  MatchEventRow,
+  MatchEvent,
+  MatchScoreDetails,
+  ParsedTeamBlock,
 } from "../../domain/config/interfaces.js";
 import { EventType } from "../../domain/config/interfaces.js";
 import type { CheerioNode } from "../../domain/config/types.js";
@@ -32,10 +32,22 @@ import {
 } from "../../domain/config/constants.js";
 
 /**
+ * ======================
  * Parsers
+ * ======================
  */
 
-// Parse the fantasy events table from a cheerio root.
+/**
+ * Parses the fantasy events table from a Cheerio root.
+ *
+ * This function:
+ * - selects all match rows from the fantasy events table
+ * - parses each row into a {@link MatchEventRow}
+ * - filters out invalid or incomplete rows
+ *
+ * @param $ - Cheerio API instance for the loaded HTML document
+ * @returns List of parsed fantasy match event rows
+ */
 export function parseFantasyTable($: CheerioAPI): MatchEventRow[] {
   const rows = $(FANTASY_EVENT_ROWS_ID).toArray();
 
@@ -44,7 +56,17 @@ export function parseFantasyTable($: CheerioAPI): MatchEventRow[] {
     .filter((row): row is MatchEventRow => row !== null);
 }
 
-// Parse a single row into a MatchEventRow.
+/**
+ * Parses a single fantasy table row into a {@link MatchEventRow}.
+ *
+ * A row is considered invalid if:
+ * - the matchday cannot be extracted
+ * - the score block does not contain exactly two teams
+ *
+ * @param $ - Cheerio API instance
+ * @param row - Cheerio node pointing to a single table row
+ * @returns Parsed match event row or `null` if required data is missing
+ */
 function parseRow($: CheerioAPI, row: CheerioNode): MatchEventRow | null {
   const matchday = extractMatchday(row);
   if (!matchday) {
@@ -74,85 +96,116 @@ function parseRow($: CheerioAPI, row: CheerioNode): MatchEventRow | null {
 }
 
 /**
- * Extractors (columns)
+ * ======================
+ * Column Extractors
+ * ======================
  */
 
+/**
+ * Extracts the matchday number from a row.
+ *
+ * Example HTML value: `"J15"` → `15`
+ *
+ * @param row - Cheerio node pointing to a table row
+ * @returns Parsed matchday number (defaults to `0` if invalid)
+ */
 function extractMatchday(row: CheerioNode): number {
-  const text = row.find(FANTASY_EVENT_MATCHDAY_ID).first().text().trim(); // "J15"
+  const text = row.find(FANTASY_EVENT_MATCHDAY_ID).first().text().trim();
   return parseIntSafe(text);
 }
 
+/**
+ * Extracts match score details (home/away teams and goals).
+ *
+ * The score cell is expected to contain **exactly two team blocks**,
+ * each composed of:
+ * - an `<img alt="TEAM_NAME">`
+ * - a `<p>` element with the goals scored
+ *
+ * @param $ - Cheerio API instance
+ * @param row - Cheerio node pointing to a table row
+ * @returns Parsed score details or `null` if the structure is invalid
+ */
 function extractScoreDetails(
   $: CheerioAPI,
   row: CheerioNode,
 ): MatchScoreDetails | null {
-  // Identify blocks containing <img alt="team"> + <p>goals</p>
   const rawBlocks = row
     .find(FANTASY_EVENT_SCORE_ID)
     .parent()
     .toArray();
 
-  // MUST contain exactly 2 team blocks
   if (rawBlocks.length !== 2) {
     return null;
   }
 
-  const parsedBlocks: ParsedTeamBlock[] = rawBlocks.map((raw): ParsedTeamBlock => {
-    const block = $(raw) as CheerioNode;
+  const parsedBlocks: ParsedTeamBlock[] = rawBlocks.map(
+    (raw): ParsedTeamBlock => {
+      const block = $(raw) as CheerioNode;
 
-    // Strictly typed extraction of teamName
-    const imgAlt = block.find("img").attr("alt");
-    const teamName: string = typeof imgAlt === "string" && imgAlt.trim().length > 0
-      ? imgAlt.trim()
-      : "Unknown Team";
+      const imgAlt = block.find("img").attr("alt");
+      const teamName =
+        typeof imgAlt === "string" && imgAlt.trim().length > 0
+          ? imgAlt.trim()
+          : "Unknown Team";
 
-    // Strictly typed extraction of goals
-    const goalsRaw = block.find("p").first().text().trim();
-    const goals: number = parseIntSafe(goalsRaw);
+      const goalsRaw = block.find("p").first().text().trim();
+      const goals = parseIntSafe(goalsRaw);
 
-    return { teamName, goals };
-  });
+      return { teamName, goals };
+    },
+  );
 
-  // Now parsedBlocks is guaranteed length 2 and fully typed
   const [home, away] = parsedBlocks;
-
-  // FIX: Add this guard clause. 
-  // It removes 'undefined' from the types of 'home' and 'away'.
   if (!home || !away) {
     return null;
   }
 
-  // Strict construction of MatchScoreDetails
-  // No more errors here because home and away are guaranteed to be defined
-  const display: string = `${home.teamName} (${home.goals}) - ${away.teamName} (${away.goals})`;
+  const display = `${home.teamName} (${home.goals}) - ${away.teamName} (${away.goals})`;
 
-  const scoreDetails: MatchScoreDetails = {
+  return {
     homeTeam: home.teamName,
     awayTeam: away.teamName,
     homeGoals: home.goals,
     awayGoals: away.goals,
     display,
   };
-
-  return scoreDetails;
 }
 
+/**
+ * Determines whether the player started the match.
+ *
+ * The UI indicates titularity with a green checked square SVG.
+ *
+ * @param row - Cheerio node pointing to a table row
+ * @returns `true` if the titularity indicator is present
+ */
 function extractTitularity(row: CheerioNode): boolean {
   const svg = row.find(FANTASY_EVENT_TITULARITY_ID).first();
   if (svg.length === 0) {
     return false;
   }
 
-  // Green square with check
-  const hasGreenPath = svg.find(FANTASY_EVENT_TITULARITY_FLAG).length > 0;
-  return hasGreenPath;
+  return svg.find(FANTASY_EVENT_TITULARITY_FLAG).length > 0;
 }
 
+/**
+ * Extracts the number of minutes played in the match.
+ *
+ * @param row - Cheerio node pointing to a table row
+ * @returns Minutes played (defaults to `0` if missing)
+ */
 export function extractMinutesPlayed(row: CheerioNode): number {
   const text = row.find(FANTASY_EVENT_MINUTES_PLAYED).first().text().trim();
   return parseIntSafe(text);
 }
 
+/**
+ * Extracts the LaLiga fantasy score for the match.
+ *
+ * @param row - Cheerio node pointing to a table row
+ * @returns LaLiga score (defaults to `0` if missing)
+ */
 export function extractLaLigaScore(row: CheerioNode): number {
   const text = row
     .find(FANTASY_EVENT_LALIGA_SCORE_ID)
@@ -162,6 +215,12 @@ export function extractLaLigaScore(row: CheerioNode): number {
   return parseIntSafe(text);
 }
 
+/**
+ * Extracts the bonus score awarded for the match.
+ *
+ * @param row - Cheerio node pointing to a table row
+ * @returns Bonus score (defaults to `0` if missing)
+ */
 export function extractBonusScore(row: CheerioNode): number {
   const text = row
     .find(FANTASY_EVENT_BONUS_SCORE_ID)
@@ -172,16 +231,27 @@ export function extractBonusScore(row: CheerioNode): number {
 }
 
 /**
- * Event extractor
+ * ======================
+ * Event Extraction
+ * ======================
  */
 
+/**
+ * Extracts all in-match events (cards, goals, assists, substitutions).
+ *
+ * Each event includes:
+ * - event type (detected from icon structure)
+ * - minute (if present)
+ *
+ * @param $ - Cheerio API instance
+ * @param row - Cheerio node pointing to a table row
+ * @returns List of parsed match events
+ */
 export function extractEvents(
   $: CheerioAPI,
   row: CheerioNode,
 ): MatchEvent[] {
-  const eventNodes = row
-    .find(FANTASY_EVENT_NODES_ID)
-    .toArray();
+  const eventNodes = row.find(FANTASY_EVENT_NODES_ID).toArray();
 
   return eventNodes.map((node) => {
     const wrapper = $(node) as CheerioNode;
@@ -195,11 +265,19 @@ export function extractEvents(
 }
 
 /**
- * Detect event type based on the icon shown in the cell.
- * Efficient: each SVG's <path> elements are scanned exactly once.
+ * Detects the {@link EventType} represented by an event icon.
+ *
+ * Detection strategy:
+ * 1. Cards: detected via specific DOM nodes (no SVG)
+ * 2. SVG-based events: inspect `<path>` attributes (`fill` and `d`)
+ *
+ * Each SVG is scanned exactly once for performance.
+ *
+ * @param $ - Cheerio API instance
+ * @param node - Cheerio node pointing to an event wrapper
+ * @returns Detected event type
  */
 function detectEventType($: CheerioAPI, node: CheerioNode): EventType {
-  // 1) Cards (no SVG, just inner divs)
   if (node.find(FANTASY_EVENT_YELLOW_CARD_ID).length > 0) {
     return EventType.YELLOW_CARD;
   }
@@ -207,7 +285,6 @@ function detectEventType($: CheerioAPI, node: CheerioNode): EventType {
     return EventType.RED_CARD;
   }
 
-  // 2) SVG-based events
   const svg = node.find("svg").first();
   if (svg.length === 0) {
     return EventType.OTHER;
@@ -226,19 +303,11 @@ function detectEventType($: CheerioAPI, node: CheerioNode): EventType {
     const fill = pathEl.attr("fill");
     const d = pathEl.attr("d");
 
-    if (fill) {
-      fills.add(fill);
-    }
-    if (d) {
-      ds.add(d);
-    }
+    if (fill) fills.add(fill);
+    if (d) ds.add(d);
   }
 
-  // 2.a Substitution arrows
-  if (
-    fills.has(FANTASY_EVENT_SUB_IN_FILL) ||
-    ds.has(FANTASY_EVENT_SUB_IN_D)
-  ) {
+  if (fills.has(FANTASY_EVENT_SUB_IN_FILL) || ds.has(FANTASY_EVENT_SUB_IN_D)) {
     return EventType.SUB_IN;
   }
 
@@ -249,7 +318,6 @@ function detectEventType($: CheerioAPI, node: CheerioNode): EventType {
     return EventType.SUB_OUT;
   }
 
-  // 2.b Goals and assists
   if (fills.has(FANTASY_EVENT_GOAL_FILL)) {
     return EventType.GOAL;
   }
@@ -261,6 +329,12 @@ function detectEventType($: CheerioAPI, node: CheerioNode): EventType {
   return EventType.OTHER;
 }
 
+/**
+ * Convenience helper to parse fantasy events directly from raw HTML.
+ *
+ * @param html - Raw HTML string of the player info page
+ * @returns Parsed fantasy match event rows
+ */
 export function parseFantasyEventsFromHtml(html: string): MatchEventRow[] {
   const $ = cheerio.load(html);
   return parseFantasyTable($);
