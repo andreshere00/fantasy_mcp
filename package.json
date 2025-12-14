@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "scrape": "bun src/interfaces/cli/main2.ts"
+    "setup": "bun src/interfaces/cli/setup.ts",
+    "scrap": "bun src/interfaces/cli/main.ts"
   },
   "keywords": [],
   "author": "Andrés Herencia <andresherencia2000@gmail.com>",
   "license": "ISC",
-  "packageManager": "pnpm@10.24.0",
   "type": "module",
   "dependencies": {
     "axios": "^1.13.2",

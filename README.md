@@ -2,237 +2,144 @@
 
 An application to analyze and build lineups on **LaLiga FANTASY** based on historical performance and Market Analysis.
 
-## Structure
+## Requirements
 
-```bash
-.
-├── README.md
-├── eslint.config.ts
-├── package.json
-├── pnpm-lock.yaml
-├── src
-│   ├── application
-│   │   ├── fantasy
-│   │   │   ├── e2e
-│   │   │   │   └── fetchPlayerSnapshot.ts
-│   │   │   └── parsers
-│   │   │       ├── fantasyEventParser.ts
-│   │   │       ├── marketDetailsParser.ts
-│   │   │       └── playerDetailsParser.ts
-│   │   ├── parsers
-│   │   │   └── fantasyEventParser.ts
-│   │   └── utils
-│   │       └── helpers.ts
-│   ├── domain
-│   │   ├── config
-│   │   │   ├── constants.ts
-│   │   │   ├── interfaces.ts
-│   │   │   └── types.ts
-│   │   ├── errors
-│   │   │   ├── appError.ts
-│   │   │   ├── httpError.ts
-│   │   │   └── scrapingError.ts
-│   │   └── fantasy
-│   │       ├── models.ts
-│   │       ├── ports.ts
-│   │       └── types.ts
-│   ├── infrastructure
-│   │   ├── fantasy
-│   │   │   ├── extractors
-│   │   │   │   ├── fantasyEventsExtractor.ts
-│   │   │   │   ├── marketDetailsExtractor.ts
-│   │   │   │   └── playerDetailsExtractor.ts
-│   │   │   └── pageGateway.ts
-│   │   └── http
-│   │       └── axiosHtmlClient.ts
-│   └── interfaces
-│       └── cli
-│           └── main.ts
-├── tests
-│   ├── application
-│   ├── domain
-│   └── infrastructure
-└── tsconfig.json
-```
+* [Node.js](https://nodejs.org/es) (ESM project; "type": "module")
+* `bun` (scripts are executed with bun)
 
-⸻
-
-## Getting started
-
-### Requirements
-
-* **Node**.js (recommended ≥ 20.x)
-* **pnpm￼** (the repo is configured to use pnpm as the package manager)
-* **Internet** access (the scraper hits analiticafantasy.com)
-
-### Installation
-
-```bash
-pnpm install
-```
-
-This will install both runtime dependencies (`axios`, `cheerio`, …) and dev tooling (**TypeScript**, **ESLint**, **Jest**, etc.).
-
-⸻
-
-### Running the scraper (CLI)
-
-The project exposes a simple CLI to fetch all data for a given player (slug) from AnaliticaFantasy.
-
-Script
-
-In package.json there is a scrape script:
-
-```json
-"scripts": {
-  "scrape": "ts-node src/main.ts"
-}
-```
-
-Note: Internally, src/main.ts should delegate to the CLI entrypoint under src/interfaces/cli/main.ts, where the dependencies are wired (HTTP client, page gateway, extractors, use case, etc.).
-
-### Basic usage
-
-From the project root:
-
-```bash
-# Default player (if no slug is provided, e.g. "pedri")
-pnpm scrape
-```
-
-To specify a player slug explicitly:
-
-```bash
-pnpm scrape pedri
-pnpm scrape bellingham
-pnpm scrape lewandowski
-```
-
-The CLI will:
-1.	Build the **URLs** for the player’s info and market pages.
-2.	Fetch the raw **HTML** with axios via the AxiosHtmlClient.
-3.	Use the `pageGateway` to decide which HTML to load (info / market).
-4.	Parse:
-  * Fantasy events history (`fantasyEventsParser`),
-  * Player details (`playerDetailsParser`),
-  * Market details (`marketDetailsParser`), 
-  * It uses the extractors under `src/infrastructure/fantasy/extractors`.
-5.	Print to stdout a JSON snapshot with:
-* `fantasyEvents`
-* `playerDetails`
-* `marketDetails`
-
-### Example output (truncated):
+## Install
 
 ```sh
-Fetching data for player: pedri
-Parsed 25 fantasy rows for slug "pedri":
-[
-  {
-    "matchday": 1,
-    "score": { "homeTeam": "...", "awayTeam": "...", ... },
-    "events": [ ... ],
-    "titularity": true,
-    "minutesPlayed": 90,
-    "laLigaScore": 8,
-    "bonusScore": 1.5
-  },
-  ...
-]
+bun install
+```
 
-Player details:
+## CLI Commands
+
+### 1) **Interactive setup** (user context snapshot)
+
+This command prompts you in the console for:
+
+* available balance
+* your squad players
+* available market players
+* opponents info
+
+Then it prints a single JSON snapshot.
+
+```sh
+bun setup
+```
+
+#### Output example (shape):
+
+```sh
 {
-  "name": "Pedri",
-  "team": "FC Barcelona",
-  "position": "midfielder",
-  "isAvailable": true,
-  "titularityChance": 0.85,
-  "trustability": 0.9,
-  "expectedScoreAsStarter": 7.2,
-  "expectedScoreAsSubstitute": 4.3
-}
-
-Market details:
-{
-  "allTimeFantasyMarket": { ... },
-  "lastFantasyMarketValues": { ... }
+  "balance": { "...": "..." },
+  "squad": [ { "...": "..." } ],
+  "market": [ { "...": "..." } ],
+  "opponents": [ { "...": "..." } ]
 }
 ```
 
+### 2) Scrape & parse a player snapshot
 
-⸻
+This command fetches **HTML** for a given player slug (default: `pedri`) and prints:
 
-## Architecture overview
+* **fantasy events** (parsed table rows)
+* **player details**
+* **market details**
 
-The project follows a layered / hexagonal structure:
-* domain/
-* config/: global constants, DTO interfaces, and shared types.
-* fantasy/:
-* models.ts: high-level domain models (e.g. player snapshot).
-* ports.ts: interfaces (ports) that the application depends on (e.g. page gateway, extractors).
-* types.ts: domain-specific type aliases and enums.
-* application/
-* fantasy/:
-* parsers/: pure parsing logic (fantasyEventParser, playerDetailsParser, marketDetailsParser), responsible only for transforming HTML → domain structures.
-* e2e/fetchPlayerSnapshot.ts: end-to-end use case that orchestrates page loading and parsing to build a full player snapshot.
-* utils/: helper functions shared across application logic.
-* infrastructure/
-* http/axiosHtmlClient.ts: concrete HTTP client implementation using axios.
-* fantasy/:
-* pageGateway.ts: knows how to construct URLs for info / market pages and fetch the corresponding HTML.
-* extractors/: implementations that adapt parsed data to domain models (wrapping the parsers).
-* interfaces/cli/main.ts
-* CLI entrypoint. Parses CLI args (slug), wires dependencies (HTTP client, gateway, extractors, use case), runs the scraper and prints JSON to stdout.
-
-Thanks to this separation, you can:
-
-* Swap the HTTP client or add proxy/headers logic inside infrastructure/http without touching parsing logic.
-* Reuse the same use case from other interfaces (e.g. HTTP API, MCP server) without changing the core scraping code.
-
-⸻
-
-## Development
-
-### Type checking
-
-```
-pnpm exec tsc --noEmit
-```
-
-### Linting
-
-```
-pnpm exec eslint .
-```
-
-### Tests
-
-A basic test structure is already in place under tests/:
+#### Run with default slug:
 
 ```sh
-tests/
-  application/
-  domain/
-  infrastructure/
+bun scrap
 ```
 
-You can run tests (once configured) with:
+Run with a specific slug:
 
 ```sh
-pnpm exec jest
+bun scrap bellingham
 ```
 
-⸻
+What it does (high level):
 
-## Roadmap
+* **HTTP**: downloads the player page HTML
+* **Extractors**: parse sections into structured models
+* **Use case**: FetchPlayerSnapshotUseCase orchestrates the full flow
+* **CLI**: prints parsed JSON to stdout
 
-* Improve **test** coverage for parsers and extractors.
-* Add richer **CLI** options (e.g. output file, only-market, only-events).
-* Expose the player **snapshot** use case as an MCP tool for consumption by LLMs.
+### Features
 
-⸻
+#### Player snapshot (E2E)
 
-## Contact
+The scrap CLI entrypoint executes an end-to-end use case that returns:
 
-* **Linkedin**: [link](https://linkedin.com/in/andres-herencia)
-* **Mail:**: [andresherencia2000@gmail.com](mailto:andresherencia2000@gmail.com)
+* **`fantasyEvents`**: parsed rows from the fantasy events table
+* **`playerDetails`**: normalized player info (position, availability, etc.)
+* **`marketDetails`**: current value + recent value changes (when present)
+
+### Notes
+
+- The project is configured with TypeScript module: "nodenext" and runs as ESM.
+- The scrap command accepts the player slug as the first CLI argument and falls back to "pedri" if not provided.
+
+### Project structure
+
+```sh
+┣ 📂application
+┃ ┣ 📂fantasy
+┃ ┃ ┣ 📂e2e
+┃ ┃ ┃ ┗ 📜fetchPlayerSnapshot.ts
+┃ ┃ ┣ 📂parsers
+┃ ┃ ┃ ┣ 📜fantasyEventParser.ts
+┃ ┃ ┃ ┣ 📜marketDetailsParser.ts
+┃ ┃ ┃ ┗ 📜playerDetailsParser.ts
+┃ ┃ ┗ 📂userContext
+┃ ┃   ┗ 📜getUserContext.ts
+┃ ┣ 📂llm
+┃ ┃ ┣ 📂ports
+┃ ┃ ┃ ┗ 📜llmPorts.ts
+┃ ┃ ┗ 📂types
+┃ ┃   ┗ 📜schema.ts
+┃ ┣ 📂parsers
+┃ ┃ ┗ 📜fantasyEventParser.ts
+┃ ┗ 📂utils
+┃   ┗ 📜helpers.ts
+┣ 📂domain
+┃ ┣ 📂config
+┃ ┃ ┣ 📜constants.ts
+┃ ┃ ┣ 📜interfaces.ts
+┃ ┃ ┗ 📜types.ts
+┃ ┣ 📂errors
+┃ ┃ ┣ 📜appError.ts
+┃ ┃ ┣ 📜httpError.ts
+┃ ┃ ┗ 📜scrapingError.ts
+┃ ┗ 📂fantasy
+┃   ┣ 📜models.ts
+┃   ┣ 📜ports.ts
+┃   ┗ 📜types.ts
+┣ 📂infrastructure
+┃ ┣ 📂fantasy
+┃ ┃ ┣ 📂extractors
+┃ ┃ ┃ ┣ 📜fantasyEventsExtractor.ts
+┃ ┃ ┃ ┣ 📜marketDetailsExtractor.ts
+┃ ┃ ┃ ┗ 📜playerDetailsExtractor.ts
+┃ ┃ ┣ 📂userContext
+┃ ┃ ┃ ┗ 📜userInformation.ts
+┃ ┃ ┗ 📜pageGateway.ts
+┃ ┣ 📂http
+┃ ┃ ┗ 📜axiosHtmlClient.ts
+┃ ┣ 📂llm
+┃ ┃ ┣ 📂base
+┃ ┃ ┃ ┗ 📜baseLlm.ts
+┃ ┃ ┣ 📂openai
+┃ ┃ ┃ ┗ 📜openaiModel.ts
+┃ ┃ ┗ 📂utils
+┃ ┃   ┗ 📜schemaAdapter.ts
+┃ ┗ 📂mcp
+┗ 📂interfaces
+  ┗ 📂cli
+    ┣ 📜main.ts
+    ┗ 📜setup.ts
+
+```
