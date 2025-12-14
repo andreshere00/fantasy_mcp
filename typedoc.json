@@ -1,0 +1,70 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+      "src/domain",
+      "src/application",
+      "src/infrastructure",
+      "src/interfaces"
+    ],
+    "entryPointStrategy": "expand",
+    "tsconfig": "tsconfig.json",
+  
+    "out": "docs/api",
+    "name": "fantasy_mcp",
+    "readme": "README.md",
+  
+    "categorizeByGroup": true,
+    "categoryOrder": [
+      "Domain",
+      "Application",
+      "Infrastructure",
+      "Interfaces",
+      "*"
+    ],
+  
+    "navigation": {
+      "includeCategories": true,
+      "includeGroups": true,
+      "includeFolders": true
+    },
+  
+    "sort": [
+      "kind",
+      "alphabetical"
+    ],
+  
+    "exclude": [
+      "**/*.test.ts",
+      "**/*.spec.ts",
+      "**/__tests__/**",
+      "**/*.d.ts",
+      "**/node_modules/**",
+      "**/dist/**"
+    ],
+  
+    "excludePrivate": true,
+    "excludeProtected": false,
+    "excludeInternal": true,
+  
+    "skipErrorChecking": false,
+    "treatWarningsAsErrors": true,
+  
+    "validation": {
+      "notExported": true,
+      "invalidLink": true,
+      "notDocumented": false
+    },
+  
+    "gitRevision": "main",
+    "gitRemote": "origin",
+    "includeVersion": true,
+  
+    "plugin": [],
+  
+    "cleanOutputDir": true,
+    "disableSources": false,
+    "sourceLinkTemplate": "https://github.com/andreshere00/fantasy_mcp",
+    "hideGenerator": true,
+  
+    "logLevel": "Info"
+  }

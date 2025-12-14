@@ -1,145 +1,191 @@
-# FantasyMCP
+# Fantasy MCP
 
-An application to analyze and build lineups on **LaLiga FANTASY** based on historical performance and Market Analysis.
+![Fantasy Image](./data/fantasy.png)
 
-## Requirements
+A **TypeScript (ESM) fantasy-football data engine built with Clean Architecture**, focused on:
 
-* [Node.js](https://nodejs.org/es) (ESM project; "type": "module")
-* `bun` (scripts are executed with bun)
+- scraping and parsing fantasy football data
+- collecting user context via CLI
+- orchestrating end-to-end use cases
+- enabling future UI and LLM-driven workflows
 
-## Install
+The project is **Bun-first, strictly typed, and heavily documented**.
+
+## Tech stack
+
+- **Runtime**: Bun
+- **Language**: TypeScript (ESM, moduleResolution: nodenext)
+- **Architecture**: Ports & Adapters (Clean Architecture)
+- **Scraping**: Axios + Cheerio
+- **Validation / Schemas**: Zod → JSON Schema
+- **LLM integration**: Provider-agnostic ports
+- **Docs**: TypeDoc
+- **Linting**: ESLint v9 + JSDoc enforcement
+
+## Installation
+
+### Prerequisites
+
+- NodeJS
+- Bun ≥ 1.0.0
+
+### Install dependencies
 
 ```sh
 bun install
 ```
 
-## CLI Commands
+## CLI Usage
 
-### 1) **Interactive setup** (user context snapshot)
+### 1️⃣ Fetch a player snapshot (end-to-end use case)
 
-This command prompts you in the console for:
-
-* available balance
-* your squad players
-* available market players
-* opponents info
-
-Then it prints a single JSON snapshot.
+Fetches, parses, and aggregates all available data for a player:
+- fantasy match events
+- player details
+- market details
 
 ```sh
-bun setup
+bun run scrap
 ```
 
-#### Output example (shape):
+With a specific player slug:
 
 ```sh
-{
-  "balance": { "...": "..." },
-  "squad": [ { "...": "..." } ],
-  "market": [ { "...": "..." } ],
-  "opponents": [ { "...": "..." } ]
-}
+bun run scrap pedri
 ```
 
-### 2) Scrape & parse a player snapshot
+What happens internally:
 
-This command fetches **HTML** for a given player slug (default: `pedri`) and prints:
+1.	HTML pages are fetched via an HTTP gateway
+2.	Pages are parsed using dedicated extractors
+3.	Results are aggregated by a single application use case
+4.	Structured JSON is printed to stdout
 
-* **fantasy events** (parsed table rows)
-* **player details**
-* **market details**
+### 2️⃣ Collect user context via CLI
 
-#### Run with default slug:
+Prompts the user for fantasy-related inputs:
+- available balance
+- squad players
+- market players
+- opponents info
+
+bun run setup
+
+Outputs a single user context snapshot JSON object, ready to be consumed by future lineup builders or LLM workflows.
+
+## Architecture overview
+
+The project follows Clean Architecture strictly.
 
 ```sh
-bun scrap
+src/
+├── domain/          # Pure domain contracts and models
+│   ├── config/
+│   └── fantasy/
+│
+├── application/     # Use cases & orchestration
+│   ├── fantasy/
+│   └── llm/
+│
+├── infrastructure/  # Adapters (HTTP, scraping, CLI, LLM providers)
+│   ├── fantasy/
+│   └── http/
+│
+└── interfaces/      # Entry points (CLI)
 ```
 
-Run with a specific slug:
+![Fantasy MCP Architecture](./data/fantasy_mcp_architecture.png)
+
+### Key principles
+
+- Domain has no dependencies
+- Application orchestrates, never scrapes
+- Infrastructure adapts external systems
+- Interfaces wire everything together
+
+## LLM integration
+
+The project includes a provider-agnostic LLM layer:
+
+- `LlmModelPort` defines the contract
+- Supports:
+  - free-form completions
+  - schema-constrained (structured) completions
+  - Zod schemas are automatically converted to JSON Schema
+
+This allows:
+
+- OpenAI / local models / mocks
+- deterministic, typed LLM outputs
+- easy future MCP / agent integration
+
+## Documentation (TypeDoc)
+
+### Generate API docs
 
 ```sh
-bun scrap bellingham
+bun run docs
 ```
 
-What it does (high level):
+Docs are generated into `docs/api/`
 
-* **HTTP**: downloads the player page HTML
-* **Extractors**: parse sections into structured models
-* **Use case**: FetchPlayerSnapshotUseCase orchestrates the full flow
-* **CLI**: prints parsed JSON to stdout
+### Viewing docs in a browser
 
-### Features
+TypeDoc does not run a web server.
 
-#### Player snapshot (E2E)
+You have two options:
 
-The scrap CLI entrypoint executes an end-to-end use case that returns:
+#### Option A — HTML docs (recommended for development)
 
-* **`fantasyEvents`**: parsed rows from the fantasy events table
-* **`playerDetails`**: normalized player info (position, availability, etc.)
-* **`marketDetails`**: current value + recent value changes (when present)
-
-### Notes
-
-- The project is configured with TypeScript module: "nodenext" and runs as ESM.
-- The scrap command accepts the player slug as the first CLI argument and falls back to "pedri" if not provided.
-
-### Project structure
+1.	Disable typedoc-plugin-markdown
+2.	Run:
 
 ```sh
-┣ 📂application
-┃ ┣ 📂fantasy
-┃ ┃ ┣ 📂e2e
-┃ ┃ ┃ ┗ 📜fetchPlayerSnapshot.ts
-┃ ┃ ┣ 📂parsers
-┃ ┃ ┃ ┣ 📜fantasyEventParser.ts
-┃ ┃ ┃ ┣ 📜marketDetailsParser.ts
-┃ ┃ ┃ ┗ 📜playerDetailsParser.ts
-┃ ┃ ┗ 📂userContext
-┃ ┃   ┗ 📜getUserContext.ts
-┃ ┣ 📂llm
-┃ ┃ ┣ 📂ports
-┃ ┃ ┃ ┗ 📜llmPorts.ts
-┃ ┃ ┗ 📂types
-┃ ┃   ┗ 📜schema.ts
-┃ ┣ 📂parsers
-┃ ┃ ┗ 📜fantasyEventParser.ts
-┃ ┗ 📂utils
-┃   ┗ 📜helpers.ts
-┣ 📂domain
-┃ ┣ 📂config
-┃ ┃ ┣ 📜constants.ts
-┃ ┃ ┣ 📜interfaces.ts
-┃ ┃ ┗ 📜types.ts
-┃ ┣ 📂errors
-┃ ┃ ┣ 📜appError.ts
-┃ ┃ ┣ 📜httpError.ts
-┃ ┃ ┗ 📜scrapingError.ts
-┃ ┗ 📂fantasy
-┃   ┣ 📜models.ts
-┃   ┣ 📜ports.ts
-┃   ┗ 📜types.ts
-┣ 📂infrastructure
-┃ ┣ 📂fantasy
-┃ ┃ ┣ 📂extractors
-┃ ┃ ┃ ┣ 📜fantasyEventsExtractor.ts
-┃ ┃ ┃ ┣ 📜marketDetailsExtractor.ts
-┃ ┃ ┃ ┗ 📜playerDetailsExtractor.ts
-┃ ┃ ┣ 📂userContext
-┃ ┃ ┃ ┗ 📜userInformation.ts
-┃ ┃ ┗ 📜pageGateway.ts
-┃ ┣ 📂http
-┃ ┃ ┗ 📜axiosHtmlClient.ts
-┃ ┣ 📂llm
-┃ ┃ ┣ 📂base
-┃ ┃ ┃ ┗ 📜baseLlm.ts
-┃ ┃ ┣ 📂openai
-┃ ┃ ┃ ┗ 📜openaiModel.ts
-┃ ┃ ┗ 📂utils
-┃ ┃   ┗ 📜schemaAdapter.ts
-┃ ┗ 📂mcp
-┗ 📂interfaces
-  ┗ 📂cli
-    ┣ 📜main.ts
-    ┗ 📜setup.ts
-
+bun run docs
+open docs/api/index.html
 ```
+
+#### Option B — Markdown docs (recommended for publishing)
+
+- Keep typedoc-plugin-markdown
+- Serve with a static server:
+
+```sh
+bunx serve docs/api
+```
+
+Or integrate with VitePress / Docusaurus / GitHub Pages.
+
+### Documentation enforcement (ESLint)
+
+The project enforces documentation coverage using ESLint:
+
+- All exported APIs must have doc comments
+- Application use cases are strictly documented
+- Internal helpers may remain undocumented
+
+### Run linting:
+
+```sh
+bun run lint
+bun run lint:docs
+```
+
+Missing docs will fail CI.
+
+## Coding conventions
+
+- ESM only ("type": "module")
+- Explicit imports with .js extensions
+- Strict TypeScript (strict: true)
+- No implicit domain logic in infrastructure
+- Thin adapters, rich use cases
+- Docstrings explain intent, not just behavior
+
+## Roadmap
+
+- Lineup builder use case
+- Web UI adapter (swap CLI)
+- Cached / offline gateways
+- LLM-assisted lineup optimization
+- MCP server exposure
