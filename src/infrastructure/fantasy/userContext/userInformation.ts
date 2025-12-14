@@ -126,7 +126,7 @@ export class ConsoleUserContext
    * The user is first asked for the number of players to enter.
    * Each player is then requested by full name.
    *
-   * Each player is enriched with `ids` computed from {@link buildIdCandidatesFromFullName}
+   * Each player is enriched with `ids` computed from buildIdCandidatesFromFullName
    * to improve cross-source matching.
    *
    * @returns List of squad players entered by the user
@@ -164,7 +164,7 @@ export class ConsoleUserContext
    * The user is first asked for the number of market players to enter.
    * Each player is then requested by full name.
    *
-   * Each player is enriched with `ids` computed from {@link buildIdCandidatesFromFullName}
+   * Each player is enriched with `ids` computed from buildIdCandidatesFromFullName
    * to improve cross-source matching.
    *
    * @returns List of market players entered by the user
