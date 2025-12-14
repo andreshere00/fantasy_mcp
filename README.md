@@ -1,238 +1,191 @@
-# FantasyMCP
+# Fantasy MCP
 
-An application to analyze and build lineups on **LaLiga FANTASY** based on historical performance and Market Analysis.
+![Fantasy Image](./data/fantasy.png)
 
-## Structure
+A **TypeScript (ESM) fantasy-football data engine built with Clean Architecture**, focused on:
 
-```bash
-.
-├── README.md
-├── eslint.config.ts
-├── package.json
-├── pnpm-lock.yaml
-├── src
-│   ├── application
-│   │   ├── fantasy
-│   │   │   ├── e2e
-│   │   │   │   └── fetchPlayerSnapshot.ts
-│   │   │   └── parsers
-│   │   │       ├── fantasyEventParser.ts
-│   │   │       ├── marketDetailsParser.ts
-│   │   │       └── playerDetailsParser.ts
-│   │   ├── parsers
-│   │   │   └── fantasyEventParser.ts
-│   │   └── utils
-│   │       └── helpers.ts
-│   ├── domain
-│   │   ├── config
-│   │   │   ├── constants.ts
-│   │   │   ├── interfaces.ts
-│   │   │   └── types.ts
-│   │   ├── errors
-│   │   │   ├── appError.ts
-│   │   │   ├── httpError.ts
-│   │   │   └── scrapingError.ts
-│   │   └── fantasy
-│   │       ├── models.ts
-│   │       ├── ports.ts
-│   │       └── types.ts
-│   ├── infrastructure
-│   │   ├── fantasy
-│   │   │   ├── extractors
-│   │   │   │   ├── fantasyEventsExtractor.ts
-│   │   │   │   ├── marketDetailsExtractor.ts
-│   │   │   │   └── playerDetailsExtractor.ts
-│   │   │   └── pageGateway.ts
-│   │   └── http
-│   │       └── axiosHtmlClient.ts
-│   └── interfaces
-│       └── cli
-│           └── main.ts
-├── tests
-│   ├── application
-│   ├── domain
-│   └── infrastructure
-└── tsconfig.json
-```
+- scraping and parsing fantasy football data
+- collecting user context via CLI
+- orchestrating end-to-end use cases
+- enabling future UI and LLM-driven workflows
 
-⸻
+The project is **Bun-first, strictly typed, and heavily documented**.
 
-## Getting started
+## Tech stack
 
-### Requirements
+- **Runtime**: Bun
+- **Language**: TypeScript (ESM, moduleResolution: nodenext)
+- **Architecture**: Ports & Adapters (Clean Architecture)
+- **Scraping**: Axios + Cheerio
+- **Validation / Schemas**: Zod → JSON Schema
+- **LLM integration**: Provider-agnostic ports
+- **Docs**: TypeDoc
+- **Linting**: ESLint v9 + JSDoc enforcement
 
-* **Node**.js (recommended ≥ 20.x)
-* **pnpm￼** (the repo is configured to use pnpm as the package manager)
-* **Internet** access (the scraper hits analiticafantasy.com)
+## Installation
 
-### Installation
+### Prerequisites
 
-```bash
-pnpm install
-```
+- NodeJS
+- Bun ≥ 1.0.0
 
-This will install both runtime dependencies (`axios`, `cheerio`, …) and dev tooling (**TypeScript**, **ESLint**, **Jest**, etc.).
-
-⸻
-
-### Running the scraper (CLI)
-
-The project exposes a simple CLI to fetch all data for a given player (slug) from AnaliticaFantasy.
-
-Script
-
-In package.json there is a scrape script:
-
-```json
-"scripts": {
-  "scrape": "ts-node src/main.ts"
-}
-```
-
-Note: Internally, src/main.ts should delegate to the CLI entrypoint under src/interfaces/cli/main.ts, where the dependencies are wired (HTTP client, page gateway, extractors, use case, etc.).
-
-### Basic usage
-
-From the project root:
-
-```bash
-# Default player (if no slug is provided, e.g. "pedri")
-pnpm scrape
-```
-
-To specify a player slug explicitly:
-
-```bash
-pnpm scrape pedri
-pnpm scrape bellingham
-pnpm scrape lewandowski
-```
-
-The CLI will:
-1.	Build the **URLs** for the player’s info and market pages.
-2.	Fetch the raw **HTML** with axios via the AxiosHtmlClient.
-3.	Use the `pageGateway` to decide which HTML to load (info / market).
-4.	Parse:
-  * Fantasy events history (`fantasyEventsParser`),
-  * Player details (`playerDetailsParser`),
-  * Market details (`marketDetailsParser`), 
-  * It uses the extractors under `src/infrastructure/fantasy/extractors`.
-5.	Print to stdout a JSON snapshot with:
-* `fantasyEvents`
-* `playerDetails`
-* `marketDetails`
-
-### Example output (truncated):
+### Install dependencies
 
 ```sh
-Fetching data for player: pedri
-Parsed 25 fantasy rows for slug "pedri":
-[
-  {
-    "matchday": 1,
-    "score": { "homeTeam": "...", "awayTeam": "...", ... },
-    "events": [ ... ],
-    "titularity": true,
-    "minutesPlayed": 90,
-    "laLigaScore": 8,
-    "bonusScore": 1.5
-  },
-  ...
-]
-
-Player details:
-{
-  "name": "Pedri",
-  "team": "FC Barcelona",
-  "position": "midfielder",
-  "isAvailable": true,
-  "titularityChance": 0.85,
-  "trustability": 0.9,
-  "expectedScoreAsStarter": 7.2,
-  "expectedScoreAsSubstitute": 4.3
-}
-
-Market details:
-{
-  "allTimeFantasyMarket": { ... },
-  "lastFantasyMarketValues": { ... }
-}
+bun install
 ```
 
+## CLI Usage
 
-⸻
+### 1️⃣ Fetch a player snapshot (end-to-end use case)
 
-## Architecture overview
-
-The project follows a layered / hexagonal structure:
-* domain/
-* config/: global constants, DTO interfaces, and shared types.
-* fantasy/:
-* models.ts: high-level domain models (e.g. player snapshot).
-* ports.ts: interfaces (ports) that the application depends on (e.g. page gateway, extractors).
-* types.ts: domain-specific type aliases and enums.
-* application/
-* fantasy/:
-* parsers/: pure parsing logic (fantasyEventParser, playerDetailsParser, marketDetailsParser), responsible only for transforming HTML → domain structures.
-* e2e/fetchPlayerSnapshot.ts: end-to-end use case that orchestrates page loading and parsing to build a full player snapshot.
-* utils/: helper functions shared across application logic.
-* infrastructure/
-* http/axiosHtmlClient.ts: concrete HTTP client implementation using axios.
-* fantasy/:
-* pageGateway.ts: knows how to construct URLs for info / market pages and fetch the corresponding HTML.
-* extractors/: implementations that adapt parsed data to domain models (wrapping the parsers).
-* interfaces/cli/main.ts
-* CLI entrypoint. Parses CLI args (slug), wires dependencies (HTTP client, gateway, extractors, use case), runs the scraper and prints JSON to stdout.
-
-Thanks to this separation, you can:
-
-* Swap the HTTP client or add proxy/headers logic inside infrastructure/http without touching parsing logic.
-* Reuse the same use case from other interfaces (e.g. HTTP API, MCP server) without changing the core scraping code.
-
-⸻
-
-## Development
-
-### Type checking
-
-```
-pnpm exec tsc --noEmit
-```
-
-### Linting
-
-```
-pnpm exec eslint .
-```
-
-### Tests
-
-A basic test structure is already in place under tests/:
+Fetches, parses, and aggregates all available data for a player:
+- fantasy match events
+- player details
+- market details
 
 ```sh
-tests/
-  application/
-  domain/
-  infrastructure/
+bun run scrap
 ```
 
-You can run tests (once configured) with:
+With a specific player slug:
 
 ```sh
-pnpm exec jest
+bun run scrap pedri
 ```
 
-⸻
+What happens internally:
+
+1.	HTML pages are fetched via an HTTP gateway
+2.	Pages are parsed using dedicated extractors
+3.	Results are aggregated by a single application use case
+4.	Structured JSON is printed to stdout
+
+### 2️⃣ Collect user context via CLI
+
+Prompts the user for fantasy-related inputs:
+- available balance
+- squad players
+- market players
+- opponents info
+
+bun run setup
+
+Outputs a single user context snapshot JSON object, ready to be consumed by future lineup builders or LLM workflows.
+
+## Architecture overview
+
+The project follows Clean Architecture strictly.
+
+```sh
+src/
+├── domain/          # Pure domain contracts and models
+│   ├── config/
+│   └── fantasy/
+│
+├── application/     # Use cases & orchestration
+│   ├── fantasy/
+│   └── llm/
+│
+├── infrastructure/  # Adapters (HTTP, scraping, CLI, LLM providers)
+│   ├── fantasy/
+│   └── http/
+│
+└── interfaces/      # Entry points (CLI)
+```
+
+![Fantasy MCP Architecture](./data/fantasy_mcp_architecture.png)
+
+### Key principles
+
+- Domain has no dependencies
+- Application orchestrates, never scrapes
+- Infrastructure adapts external systems
+- Interfaces wire everything together
+
+## LLM integration
+
+The project includes a provider-agnostic LLM layer:
+
+- `LlmModelPort` defines the contract
+- Supports:
+  - free-form completions
+  - schema-constrained (structured) completions
+  - Zod schemas are automatically converted to JSON Schema
+
+This allows:
+
+- OpenAI / local models / mocks
+- deterministic, typed LLM outputs
+- easy future MCP / agent integration
+
+## Documentation (TypeDoc)
+
+### Generate API docs
+
+```sh
+bun run docs
+```
+
+Docs are generated into `docs/api/`
+
+### Viewing docs in a browser
+
+TypeDoc does not run a web server.
+
+You have two options:
+
+#### Option A — HTML docs (recommended for development)
+
+1.	Disable typedoc-plugin-markdown
+2.	Run:
+
+```sh
+bun run docs
+open docs/api/index.html
+```
+
+#### Option B — Markdown docs (recommended for publishing)
+
+- Keep typedoc-plugin-markdown
+- Serve with a static server:
+
+```sh
+bunx serve docs/api
+```
+
+Or integrate with VitePress / Docusaurus / GitHub Pages.
+
+### Documentation enforcement (ESLint)
+
+The project enforces documentation coverage using ESLint:
+
+- All exported APIs must have doc comments
+- Application use cases are strictly documented
+- Internal helpers may remain undocumented
+
+### Run linting:
+
+```sh
+bun run lint
+bun run lint:docs
+```
+
+Missing docs will fail CI.
+
+## Coding conventions
+
+- ESM only ("type": "module")
+- Explicit imports with .js extensions
+- Strict TypeScript (strict: true)
+- No implicit domain logic in infrastructure
+- Thin adapters, rich use cases
+- Docstrings explain intent, not just behavior
 
 ## Roadmap
 
-* Improve **test** coverage for parsers and extractors.
-* Add richer **CLI** options (e.g. output file, only-market, only-events).
-* Expose the player **snapshot** use case as an MCP tool for consumption by LLMs.
-
-⸻
-
-## Contact
-
-* **Linkedin**: [link](https://linkedin.com/in/andres-herencia)
-* **Mail:**: [andresherencia2000@gmail.com](mailto:andresherencia2000@gmail.com)
+- Lineup builder use case
+- Web UI adapter (swap CLI)
+- Cached / offline gateways
+- LLM-assisted lineup optimization
+- MCP server exposure

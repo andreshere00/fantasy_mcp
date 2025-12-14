@@ -1,5 +1,3 @@
-// application/fantasy/userContext/getUserContext.ts
-
 import type {
     AvailableBalancePort,
     AvailableMarketPlayersPort,

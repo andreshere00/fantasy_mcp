@@ -4,12 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "scrape": "bun src/interfaces/cli/main2.ts"
+    "setup": "bun src/interfaces/cli/setup.ts",
+    "scrap": "bun src/interfaces/cli/main.ts",
+    "docs": "typedoc",
+    "docs:serve": "typedoc --serve --watch",
+    "lint": "eslint .",
+    "lint:docs": "eslint . --max-warnings=0"
   },
   "keywords": [],
   "author": "Andrés Herencia <andresherencia2000@gmail.com>",
   "license": "ISC",
-  "packageManager": "pnpm@10.24.0",
   "type": "module",
   "dependencies": {
     "axios": "^1.13.2",
@@ -26,11 +30,14 @@
     "@typescript-eslint/parser": "^8.49.0",
     "domhandler": "^5.0.3",
     "eslint": "^9.39.1",
+    "eslint-plugin-jsdoc": "^61.5.0",
     "globals": "^16.5.0",
     "jest": "^30.2.0",
     "jiti": "^2.6.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
+    "typedoc": "^0.28.15",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.49.0"
   }
