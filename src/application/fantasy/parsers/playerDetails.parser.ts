@@ -9,8 +9,8 @@ import {
   PLAYER_DETAILS_SELECTORS,
   POSITION_CODE_MAP,
 } from '../../../domain/config/constants.js';
-import type { PlayerDetails, } from '../../../domain/config/interfaces.js';
-import type { PlayerPosition } from '../../../domain/config/types.js';
+import type { PlayerDetails, } from '../../../domain/config/models.js';
+import type { PlayerPosition } from '../../../domain/config/alias.js';
 import { parsePercentageToDecimal, parseScore } from '../../utils/helpers.js';
 
 /**

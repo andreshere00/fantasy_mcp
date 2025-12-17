@@ -2,8 +2,9 @@ import type {
   MatchEventRow,
   PlayerDetails,
   MarketDetails,
-} from "../config/interfaces.js";
+} from "../config/models.js";
 import type { PlayerSlug, EurAmount } from "./alias.js";
+import { z } from "zod";
 
 /**
  * ======================
@@ -173,3 +174,33 @@ export interface ReleaseClauseInfo {
    */
   clauseValueEur: EurAmount;
 }
+
+/**
+ * ======================
+ * MCP Client
+ * ======================
+ */
+
+/**
+ * Line-Up
+ */
+
+export interface LineupRequest {
+  formation: "343" | "352" | "433" | "442" | "451" | "532" | "541";
+}
+
+export interface LineupResult {
+  formation: LineupRequest["formation"];
+  starters: PlayerSlug[];
+  bench: PlayerSlug[];
+  rationale: string;
+}
+
+export const LineupSchema = z.object({
+  formation: z.enum(["343", "352", "433", "442", "451", "532", "541"]),
+  starters: z.array(z.string().min(1)).min(11).max(11),
+  bench: z.array(z.string().min(1)).min(0).max(12),
+  rationale: z.string().min(1),
+});
+
+export type LineupSchemaType = z.infer<typeof LineupSchema>;

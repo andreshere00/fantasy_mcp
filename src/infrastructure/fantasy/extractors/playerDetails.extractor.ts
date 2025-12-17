@@ -1,8 +1,8 @@
 import type {
   PlayerDetailsExtractor,
 } from "../../../domain/fantasy/ports.js";
-import type { PlayerDetails } from "../../../domain/config/interfaces.js";
-import { parsePlayerDetailsFromHtml } from "../../../application/fantasy/parsers/playerDetailsParser.js";
+import type { PlayerDetails } from "../../../domain/config/models.js";
+import { parsePlayerDetailsFromHtml } from "../../../application/fantasy/parsers/playerDetails.parser.js";
 
 /**
  * Infrastructure adapter that extracts player details

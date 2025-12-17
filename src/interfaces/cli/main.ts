@@ -1,8 +1,8 @@
 import { AxiosHtmlClient } from "../../infrastructure/http/axiosHtmlClient.js";
 import { AnaliticaPageGatewayImpl } from "../../infrastructure/fantasy/pageGateway.js";
-import { FantasyEventsExtractorImpl } from "../../infrastructure/fantasy/extractors/fantasyEventsExtractor.js";
-import { PlayerDetailsExtractorImpl } from "../../infrastructure/fantasy/extractors/playerDetailsExtractor.js";
-import { MarketDetailsExtractorImpl } from "../../infrastructure/fantasy/extractors/marketDetailsExtractor.js";
+import { FantasyEventsExtractorImpl } from "../../infrastructure/fantasy/extractors/fantasyEvents.extractor.js";
+import { PlayerDetailsExtractorImpl } from "../../infrastructure/fantasy/extractors/playerDetails.extractor.js";
+import { MarketDetailsExtractorImpl } from "../../infrastructure/fantasy/extractors/marketDetails.extractor.js";
 import { FetchPlayerSnapshotUseCase } from "../../application/fantasy/e2e/fetchPlayerSnapshot.js";
 
 /**

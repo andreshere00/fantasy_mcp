@@ -63,6 +63,86 @@ export interface NormalizedJsonSchema {
  */
 
 /**
+ * Ensures the returned schema is a JSON Schema with root `type: "object"`.
+ *
+ * `zod-to-json-schema` may return a `$ref` root with `definitions` / `$defs`.
+ * Azure/OpenAI structured outputs require the root schema itself to be an object.
+ *
+ * @param raw - JSON schema returned by `zod-to-json-schema`
+ * @param fallbackName - Logical schema name used as fallback lookup key
+ * @returns Root object JSON schema
+ * @throws Error if a root object schema cannot be resolved
+ */
+function resolveRootObjectSchema(
+  raw: Record<string, unknown>,
+  _fallbackName: string,
+): Record<string, unknown> {
+  // Case 1: already a root object schema
+  if (raw.type === "object") {
+    return raw;
+  }
+
+  // If schema is a $ref root, resolve from definitions/$defs using the ref path.
+  const ref = typeof raw.$ref === "string" ? raw.$ref : null;
+  const defs =
+    (raw.definitions as Record<string, unknown> | undefined) ??
+    (raw.$defs as Record<string, unknown> | undefined);
+
+  if (ref && defs) {
+    const defKey =
+      extractRefKey(ref, "#/definitions/") ??
+      extractRefKey(ref, "#/$defs/");
+
+    if (defKey) {
+      const resolved = defs[defKey];
+      if (
+        resolved &&
+        typeof resolved === "object" &&
+        (resolved as Record<string, unknown>).type === "object"
+      ) {
+        return resolved as Record<string, unknown>;
+      }
+
+      // If it exists but isn't an object, fail with details
+      throw new Error(
+        `Resolved schema root is not an object. ref=${ref} resolvedType=${
+          resolved && typeof resolved === "object"
+            ? String((resolved as any).type)
+            : typeof resolved
+        }`,
+      );
+    }
+  }
+
+  // Helpful diagnostics: show whether definitions/$defs exist and their keys
+  const defKeys = Object.keys((raw.definitions as any) ?? {});
+  const defsKeys = Object.keys((raw.$defs as any) ?? {});
+
+  throw new Error(
+    `Invalid JSON schema root. Expected type: "object". Got: ${JSON.stringify({
+      type: raw.type,
+      $ref: raw.$ref,
+      definitionsKeys: defKeys.slice(0, 20),
+      $defsKeys: defsKeys.slice(0, 20),
+    })}`,
+  );
+}
+/**
+ * Extracts the definition key from a JSON Schema $ref.
+ *
+ * Example:
+ * - ref: "#/definitions/MySchema" + prefix "#/definitions/" -> "MySchema"
+ *
+ * @param ref - The $ref string
+ * @param prefix - The expected prefix
+ * @returns The extracted key or null if prefix doesn't match
+ */
+function extractRefKey(ref: string, prefix: string): string | null {
+  if (!ref.startsWith(prefix)) return null;
+  const key = ref.slice(prefix.length);
+  return key.length ? key : null;
+}
+/**
  * Converts a Zod schema or raw JSON Schema into a normalized JSON Schema
  * compatible with LLM structured output APIs.
  *
@@ -85,11 +165,16 @@ export function adaptSchemaToJsonSchema(
   }
 
   if (isZod(input)) {
-    const jsonSchema = zodToJsonSchema(input as any, { name });
+    const raw = zodToJsonSchema(input as any, {
+      name,
+      $refStrategy: "none",
+    }) as Record<string, unknown>;
+
+    const schema = resolveRootObjectSchema(raw, name);
 
     return {
       name,
-      schema: jsonSchema as Record<string, unknown>,
+      schema,
       strict: true,
     };
   }

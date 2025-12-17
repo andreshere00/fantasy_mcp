@@ -1,8 +1,8 @@
 import type {
   MarketDetailsExtractor,
 } from "../../../domain/fantasy/ports.js";
-import type { MarketDetails } from "../../../domain/config/interfaces.js";
-import { parseMarketDetailsFromHtml } from "../../../application/fantasy/parsers/marketDetailsParser.js";
+import type { MarketDetails } from "../../../domain/config/models.js";
+import { parseMarketDetailsFromHtml } from "../../../application/fantasy/parsers/marketDetails.parser.js";
 
 /**
  * Infrastructure adapter that extracts market-related data

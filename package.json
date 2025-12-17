@@ -6,6 +6,8 @@
   "scripts": {
     "setup": "bun src/interfaces/cli/setup.ts",
     "scrap": "bun src/interfaces/cli/main.ts",
+    "mcp:server": "bun run src/infrastructure/mcp/server/index.ts",
+    "mcp:lineup": "bun run src/interfaces/cli/mcp.ts",
     "docs": "typedoc",
     "docs:serve": "typedoc --serve --watch",
     "lint": "eslint .",
@@ -16,12 +18,14 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.1",
     "axios": "^1.13.2",
     "bum": "^0.0.0",
     "cheerio": "^1.1.2",
+    "dotenv": "^17.2.3",
     "openai": "^6.10.0",
     "pnpm": "^10.25.0",
-    "zod": "^4.1.13",
+    "zod": "^4.2.1",
     "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
-import { ConsoleUserContext } from "../../infrastructure/fantasy/userContext/userInformation.js";
-import { getUserContextSnapshot } from "../../application/fantasy/userContext/getUserContext.js";
+import { ConsoleUserContext } from "../../infrastructure/fantasy/userContext/userContext.js";
+import { getUserContextSnapshot } from "../../application/fantasy/e2e/getUserContext.js";
 
 /**
  * CLI entrypoint for collecting a user context snapshot via console prompts.
