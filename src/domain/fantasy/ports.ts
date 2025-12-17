@@ -3,7 +3,7 @@ import type {
   PlayerDetails,
   MarketDetails,
 } from "../config/interfaces.js";
-import type { AnaliticaPageKind } from "./types.js";
+import type { AnaliticaPageKind } from "./alias.js";
 import type { MarketPlayer, OpponentInfo, SquadPlayer } from "./models.js";
 
 /**

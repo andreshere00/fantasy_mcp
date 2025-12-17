@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { PlayerPosition } from './types.js';
+import type { PlayerPosition } from './alias.js';
 
 /**
  * General

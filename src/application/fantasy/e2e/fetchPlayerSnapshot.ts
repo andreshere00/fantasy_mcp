@@ -2,7 +2,7 @@ import type {
     PlayerSnapshot,
     PlayerSnapshotOptions
   } from "../../../domain/fantasy/models.js";
-import type { PlayerSlug } from "../../../domain/fantasy/types.js";
+import type { PlayerSlug } from "../../../domain/fantasy/alias.js";
 import type {
   AnaliticaPageGateway,
   FantasyEventsExtractor,
