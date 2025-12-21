@@ -1,8 +1,8 @@
 import type {
   FantasyEventsExtractor,
 } from "../../../domain/fantasy/ports.js";
-import type { MatchEventRow } from "../../../domain/config/interfaces.js";
-import { parseFantasyEventsFromHtml } from "../../../application/fantasy/parsers/fantasyEventParser.js";
+import type { MatchEventRow } from "../../../domain/config/models.js";
+import { parseFantasyEventsFromHtml } from "../../../application/fantasy/parsers/fantasyEvent.parser.js";
 
 /**
  * Infrastructure adapter that extracts fantasy match events

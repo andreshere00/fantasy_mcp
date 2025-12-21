@@ -1,9 +1,9 @@
 import type {
-  LlmModelPort,
   CompletionOptions,
   StructuredCompletionOptions,
   LlmModelInfo,
-} from "../../../application/llm/ports/llmPorts.js";
+} from "../../../domain/llm/models.js";
+import type { LlmModelPort } from "../../../domain/llm/ports.js";
 
 /**
  * ======================

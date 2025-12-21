@@ -9,3 +9,5 @@ import type { ZodType } from "zod";
 export type LlmSchema =
   | Record<string, unknown> // JSON Schema
   | ZodType;
+
+export type LlmProvider = "openai" | "azure-openai";

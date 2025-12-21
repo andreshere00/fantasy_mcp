@@ -11,7 +11,7 @@ import type {
   MarketDelta,
   MarketDetails,
   PriceWithDate,
-} from '../../../domain/config/interfaces.js';
+} from '../../../domain/config/models.js';
 import { parseEuroToInteger } from '../../utils/helpers.js';
 
 /**

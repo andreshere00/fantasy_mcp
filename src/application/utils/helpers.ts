@@ -20,6 +20,36 @@ export function parseIntSafe(value: string | null | undefined): number {
 }
 
 /**
+ * Parses a human-readable day duration into a non-negative integer number of days.
+ *
+ * Supported input formats (case-insensitive, surrounding whitespace ignored):
+ * - `"2"`
+ * - `"2d"`
+ * - `"2 día"`, `"2 días"`
+ * - `"2 dia"`, `"2 dias"`
+ *
+ * The function extracts the numeric component and validates that it represents
+ * a finite, non-negative integer.
+ *
+ * @param raw - Raw user-provided input representing a duration in days.
+ * @returns Number of days as a non-negative integer.
+ *
+ * @throws Error If the input does not match a supported format or if the parsed
+ * number is not a non-negative integer.
+ */
+export const parseDays = (raw: string): number => {
+  const cleaned = raw.trim().toLowerCase();
+
+  // Accept: "2", "2d", "2 días", "2 dias"
+  const m = RegExp(/^(\d+)\s*(d|día|dias|días)?$/i).exec(cleaned);
+  if (!m) throw new Error(`Invalid days: "${raw}"`);
+
+  const n = Number(m[1]);
+  if (!Number.isInteger(n) || n < 0) throw new Error(`Invalid days: "${raw}"`);
+  return n;
+};
+
+/**
  * Safely parses a floating-point number from a string.
  *
  * - Supports European decimal format (`,` as decimal separator)
@@ -178,7 +208,6 @@ export const parseCSV = (raw: string): string[] =>
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-
 
 /**
  * Parses a euro-formatted monetary string into an integer.

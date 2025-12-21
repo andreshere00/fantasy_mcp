@@ -3,7 +3,7 @@ import {
     PLAYER_MARKET_BASE_URL,
     USER_AGENT,
   } from "../../domain/config/constants.js";
-  import type { AnaliticaPageKind } from "../../domain/fantasy/types.js";
+  import type { AnaliticaPageKind } from "../../domain/fantasy/alias.js";
   import type { AnaliticaPageGateway } from "../../domain/fantasy/ports.js";
   import type { HttpClient } from "../http/axiosHtmlClient.js";
   

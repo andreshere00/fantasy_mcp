@@ -1,4 +1,4 @@
-import type { PlayerPosition } from './types.js';
+import type { PlayerPosition } from './alias.js';
 
 /**
  * Fantasy events

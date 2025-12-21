@@ -6,9 +6,9 @@ import type {
   MatchEvent,
   MatchScoreDetails,
   ParsedTeamBlock,
-} from "../../../domain/config/interfaces.js";
-import { EventType } from "../../../domain/config/interfaces.js";
-import type { CheerioNode } from "../../../domain/config/types.js";
+} from "../../../domain/config/models.js";
+import { EventType } from "../../../domain/config/models.js";
+import type { CheerioNode } from "../../../domain/config/alias.js";
 import { parseIntSafe, parseFloatSafe } from "../../utils/helpers.js";
 
 import {

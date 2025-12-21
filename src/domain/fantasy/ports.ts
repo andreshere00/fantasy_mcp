@@ -2,8 +2,8 @@ import type {
   MatchEventRow,
   PlayerDetails,
   MarketDetails,
-} from "../config/interfaces.js";
-import type { AnaliticaPageKind } from "./types.js";
+} from "../config/models.js";
+import type { AnaliticaPageKind } from "./alias.js";
 import type { MarketPlayer, OpponentInfo, SquadPlayer } from "./models.js";
 
 /**

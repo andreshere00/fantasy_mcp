@@ -3,7 +3,7 @@ import type {
   CompletionOptions,
   StructuredCompletionOptions,
   LlmModelInfo,
-} from "../../../application/llm/ports/llmPorts.js";
+} from "../../../domain/llm/models.js";
 import { BaseLlmModel } from "../base/baseLlm.js";
 import { adaptSchemaToJsonSchema } from "../utils/schemaAdapter.js";
 

@@ -2,8 +2,9 @@ import type {
   MatchEventRow,
   PlayerDetails,
   MarketDetails,
-} from "../config/interfaces.js";
-import type { PlayerSlug } from "./types.js";
+} from "../config/models.js";
+import type { PlayerSlug, EurAmount } from "./alias.js";
+import { z } from "zod";
 
 /**
  * ======================
@@ -103,16 +104,21 @@ export interface MarketPlayer {
   name: string;
 }
 
+
+/**
+ * Opponents should expose actual players (not just string names)
+ * so you can attach releaseClause info.
+ */
+export interface OpponentPlayer {
+  ids: string[];
+  name: string;
+  releaseClause?: ReleaseClauseInfo;
+}
+
 /**
  * Represents information about an opposing team or manager.
  */
 export interface OpponentInfo {
-  /**
-   * List of provider-specific or normalized identifiers
-   * associated with the opponent.
-   */
-  ids: string[];
-
   /**
    * Display name of the opponent.
    */
@@ -128,7 +134,7 @@ export interface OpponentInfo {
   /**
    * List of key players to consider when analyzing the opponent.
    */
-  keyPlayers?: string[];
+  players?: OpponentPlayer[];
 }
 
 /**
@@ -147,3 +153,54 @@ export interface NamedPlayer {
    */
   name: string;
 }
+
+export interface ReleaseToMarketDelay {
+  unit: "days";
+  value: number; // integer >= 0
+}
+
+/**
+ * Release clause info attached to a player in a squad (or opponent squad).
+ * If unknown, omit the property (preferred with exactOptionalPropertyTypes).
+ */
+export interface ReleaseClauseInfo {
+  /**
+   * How long until the player is released to market (e.g. 2 days).
+   */
+  releaseToMarketIn: ReleaseToMarketDelay;
+
+  /**
+   * Clause value in euros (e.g. 56000000 for "56.000.000€").
+   */
+  clauseValueEur: EurAmount;
+}
+
+/**
+ * ======================
+ * MCP Client
+ * ======================
+ */
+
+/**
+ * Line-Up
+ */
+
+export interface LineupRequest {
+  formation: "343" | "352" | "433" | "442" | "451" | "532" | "541";
+}
+
+export interface LineupResult {
+  formation: LineupRequest["formation"];
+  starters: PlayerSlug[];
+  bench: PlayerSlug[];
+  rationale: string;
+}
+
+export const LineupSchema = z.object({
+  formation: z.enum(["343", "352", "433", "442", "451", "532", "541"]),
+  starters: z.array(z.string().min(1)).min(11).max(11),
+  bench: z.array(z.string().min(1)).min(0).max(12),
+  rationale: z.string().min(1),
+});
+
+export type LineupSchemaType = z.infer<typeof LineupSchema>;
